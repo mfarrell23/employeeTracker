@@ -1,5 +1,4 @@
-const express= require('express');
- //import and require mysql2;
+//import and require mysql2;
 const mysql2= require('mysql2');
 const inquirer= require('inquirer');
 
@@ -15,18 +14,18 @@ const db = mysql.createConnection(
   {
     host: '127.0.0.1',
     user: 'root',
-    database: movies_db
+    database: employee_db
   },
-  console.log(`Connected to the movie_db database.`)
+  console.log(`Connected to the employee_db database.`)
 );
 // GET request for movies
-app.get('/api/movies', (req, res) => {
+app.get('/api/employees', (req, res) => {
   // Inform the client
-  res.json(`${req.method} request received to get movies`);
+  res.json(`${req.method} request received to get employees`);
   // Log our request to the terminal
-  console.info(`${req.method} request received to get movies`);
+  console.info(`${req.method} request received to get employees`);
   //Query
-  db.query('SELECT * FROM movies', function (err, results) {
+  db.query('SELECT * FROM employees', function (err, results) {
       console.log(results);
   })
 });
@@ -44,20 +43,7 @@ app.post('/api/add-movie', ({ body }, res) => {
       }
   });
 });
-app.put('api/update-review', ({ body }, res) => {
-  const params = [body.movie_name]
-  db.query('UPDATE reviews (review) VALUES (?)', params, function (err, results) {
-      if (err) {
-          console.error(err);
-      } else {
-      res.json({
-          message: "success",
-          data: body
-      })
-      console.log(results);
-      }
-  });
-})
+
 app.delete('api/movie/:id', (req,res) => {
   res.json(`${req.method} request received to delete a movie`);
   console.info(`${req.method} request received to delete a movie`);
