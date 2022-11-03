@@ -1,15 +1,6 @@
 //import and require mysql2;
 const mysql2= require('mysql2');
-var express = require('express'); // Get the module
-var app = express(); // Create express by calling the prototype in var express
 const inquirer= require('inquirer');
-
-const PORT = process.env.PORT || 3001;
-
-// Express middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
 const employee_db = 'employee_db'
 //Connect to database
 const db = mysql2.createConnection(
@@ -46,27 +37,29 @@ function addRolePrompt(){
     },
   ])
   .then((answer) => {
-      addRole(answer.title, answer.salary, answer.departrment_id)
+      addRole(answer.title, answer.salary, answer.department_id)
   });
 }
 
-function updatingEmployeePromt(){
+function updatingEmployeeRolePrompt(){
   inquirer
   .prompt([
     {
-      type: "input",
-      message: "What is your new role?",
-      name: "newRole",
+      type: "list",
+      message: "Which employee's role do you want to update?",
+      choices: ['Raja Farrell', 'Roger Evens', 'Oakly Jones'],
+      name: "employee_name",
     },
     {
       type: "list",
-      message: "Are you a manager?",
-      choices: ['yes','no'],
-      name: "manager_id"
+      message: "Which role do you want to assign the selected employee?",
+      choices: ['Finance Helper','Sales Associate', 'Teller'],
+      name: "role_name"
     },
   ])
   .then((answer) => {
-      updatingEmployeePromt(answer.newRole, answer.manager_id)
+      console.log("Prompt: " + answer.employee_name + " " + answer.role_name)
+      updateEmployeeRole(answer.employee_name, answer.role_name)
   });
 }
 
@@ -102,6 +95,7 @@ function addDepartmentPrompt(){
       addDepartment(answer.department);
   });
 }
+
 function getPrompt(){
 inquirer
 .prompt([
@@ -132,7 +126,7 @@ inquirer
       else if(sqlOptions==="Update Employee Role"){
         //sql function for updating employee role
         console.log('Updating Employee Role');
-        updatingEmployeePromt();
+        updatingEmployeeRolePrompt();
         
       }
       else if(sqlOptions==="View All Departments"){
@@ -179,7 +173,7 @@ function viewAllDepartments(){
 )}
 //add department function
 function addDepartment(name){
-  sql= `INSERT INTO department(name) VALUES(${name})`;
+  sql= `INSERT INTO department(name) VALUES('${name}')`;
     db.execute(sql, function (err, results) {
       if(err){
         console.log("Error message: " + err)
@@ -189,8 +183,8 @@ function addDepartment(name){
   });
 }
 //add role function
-function addRole(){
-  sql= `INSERT INTO role VALUES(title,salary,department)`;
+function addRole(title, salary, department_id){
+  sql= `INSERT INTO role(title, salary, department_id) VALUES('${title}', '${salary}', '${department_id}')`;
     db.execute(sql, function (err, results) {
       if(err){
         console.log("Error message: " + err)
@@ -201,7 +195,8 @@ function addRole(){
 }
 
 function viewAllEmployees(){
-    const sql = "SELECT employee.first_name, employee.last_name, role.title, department.name, role.salary, employee.manager_id FROM employee JOIN role ON employee.role_id = role.id JOIN department ON department.id = role.id";    
+     const sql = "SELECT * from employee";    
+    //const sql = "SELECT first_name FROM employee UNION title FROM role UNION name FROM department UNION salary FROM role UNION manager_id FROM employee";
     db.execute(sql, function (err, results) {
       if(err){
         console.log("Error message: " + err)
@@ -212,7 +207,7 @@ function viewAllEmployees(){
 }
 
 function addNewEmployee(first_name, last_name){
-  sql= `INSERT INTO employee (first_name, last_name, manager_id) VALUES('${first_name}' , '${last_name}', NULL)`;
+  sql= `INSERT INTO employee (first_name, last_name, manager_id) VALUES('${first_name}' , '${last_name}', '5')`;
   db.execute(sql, function (err, results) { 
     if(err){
       console.log("Error message: " + err)
@@ -232,6 +227,19 @@ function viewAllRoles(){
     return getPrompt();
   })
 }
-  // app.listen(PORT, () => {
-  //   console.log(`Server running on port ${PORT}`);
-  // });
+//name, role
+function updateEmployeeRole(employee_name, role_title){
+  let name = employee_name.split(" ");
+  let first = name[0];
+  let last = name[1]
+
+  var sql = `UPDATE employee JOIN role SET role.title = '${role_title}' WHERE employee.first_name = '${first}' AND employee.last_name = '${last}' AND role.id = employee.role_id LIMIT 1;`;
+  db.execute(sql, function (err, results) {
+    if(err){
+      console.log("Error message: " + err)
+    }  
+    
+    console.table(results);
+    return getPrompt();
+  })
+}
